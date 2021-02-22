@@ -16,4 +16,4 @@ $ modman clone https://github.com/nestorgacr/magentoAuthorizeNet.git
 
 ## Authors
 
-* Nestor Garcia
+* Nestor Garcia Alfaro

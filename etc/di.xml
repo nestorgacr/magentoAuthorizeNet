@@ -1,48 +1,136 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <!--Authorize.Net Payment Facade Virtual Type COnfiguration-->
+   
+    <!-- Authorize.NET Payment Facade Virtual Type Configuration -->
     <virtualType name="JngaAuthorizenetFacade" type="Magento\Payment\Model\Method\Adapter">
         <arguments>
             <argument name="code" xsi:type="string">jnga_authorizenet</argument>
             <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form\Cc</argument>
-            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\ConfigurableInfo</argument>
+            <argument name="infoBlockType" xsi:type="string">JngaAuthorizenetConfigurableInfo</argument>
             <argument name="valueHandlerPool" xsi:type="object">JngaAuthorizenetValueHandlerPool</argument>
             <argument name="commandPool" xsi:type="object">JngaAuthorizenetCommandPool</argument>
         </arguments>
     </virtualType>
 
-    <!-- Authorize.Net Value Handler Pool Configuration-->
+    <!-- Authorize.NET Value Handler Pool Configuration -->
     <virtualType name="JngaAuthorizenetValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
         <arguments>
             <argument name="handlers" xsi:type="array">
                 <item name="default" xsi:type="string">JngaAuthorizenetConfigValueHandler</item>
             </argument>
-        </arguments>
+        </arguments>    
     </virtualType>
 
-    <!-- Authorize.Net Value Handler Configuration-->
+    <!-- Authorize.NET Config Value Handler Configuration -->
     <virtualType name="JngaAuthorizenetConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
         <arguments>
-            <argument name="configInterface" xsi:type="object">JngaAuthorizenetConfig</argument>
+            <argument name="configInterface" xsi:type="object">JngaConfig</argument>
         </arguments>
     </virtualType>
 
-    <!-- Authorize.Net Gateway Config-->
-    <virtualType name="JngaAuthorizenetConfig" type="Magento\Payment\Gateway\Config\Config">
+    <!-- Authorize.NET Gateway Config  -->
+    <virtualType name="JngaConfig" type="Magento\Payment\Gateway\Config\Config">
         <arguments>
             <argument name="methodCode" xsi:type="string">jnga_authorizenet</argument>
-        </arguments>        
+        </arguments>
     </virtualType>
 
-    <!-- Authorize.Net Command Pool Configuration-->
+    <!-- Authorize.NET Command Pool Configuration -->
     <virtualType name="JngaAuthorizenetCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="authorize" xsi:type="string">Magento\Payment\Gateway\Command\NullCommand</item>
-                <item name="capture" xsi:type="string">Magento\Payment\Gateway\Command\NullCommand</item>
+                <item name="capture" xsi:type="string">JngaAuthorizenetChargeCommand</item>
             </argument>
         </arguments>
     </virtualType>
 
+
+    <!-- Authorize.NET Request Charge Transaction Builder -->
+    <virtualType name="JngaAuthorizenetChargeTransactionBuilder" type="Jnga\Authorizenet\Gateway\Request\RequestBuilder">
+        <arguments>
+            <argument name="builder" xsi:type="object">JngaAuthorizenetChargeBuilderComposite</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Authorize.NET Request Charge Transaction Builder Composite -->
+    <virtualType name="JngaAuthorizenetChargeBuilderComposite" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="charge" xsi:type="string">Jnga\Authorizenet\Gateway\Request\Builder\Charge</item>
+                <item name="payment" xsi:type="string">Jnga\Authorizenet\Gateway\Request\Builder\Payment</item>
+                <item name="productItems" xsi:type="string">Jnga\Authorizenet\Gateway\Request\Builder\ProductItems</item>
+                <item name="totals" xsi:type="string">Jnga\Authorizenet\Gateway\Request\Builder\Totals</item>
+                <item name="address" xsi:type="string">Jnga\Authorizenet\Gateway\Request\Builder\Address</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+
+    <!-- Authorize.NET Charge Command -->
+    <virtualType name="JngaAuthorizenetChargeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">JngaAuthorizenetChargeTransactionBuilder</argument>
+            <argument name="transferFactory" xsi:type="object">Jnga\Authorizenet\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Jnga\Authorizenet\Gateway\Http\Client</argument>   
+            <argument name="handler" xsi:type="object">JngaAuthorizenetChargeHandler</argument>   
+            <argument name="validator" xsi:type="object">Jnga\Authorizenet\Gateway\Validator\GeneralResponseValidator</argument> 
+        </arguments>
+    </virtualType>
+
+    <!-- Authorizet.NET Client -->
+    <type name="Jnga\Authorizenet\Gateway\Http\Client">
+        <arguments>
+            <argument name="logger" xsi:type="object">JngaAuthorizenetLogger</argument>
+            <argument name="converter" xsi:type="object">Jnga\Authorizenet\Gateway\Converter\JsonToArray</argument>
+        </arguments>
+    </type>
+
+    <!-- Authorize.NET Jnga Logger -->
+    <virtualType name="JngaAuthorizenetLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">JngaConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Jnga\Authorizenet\Gateway\Converter\JsonToArray">
+        <arguments>
+            <argument name="serializer" xsi:type="object">Magento\Framework\Serialize\Serializer\Json</argument>
+        </arguments>
+    </type>
+
+    <type name="Jnga\Authorizenet\Gateway\Converter\Converter">
+        <arguments>
+            <argument name="converter" xsi:type="object">Jnga\Authorizenet\Gateway\Converter\ArrayToJson</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="JngaAuthorizenetChargeHandler" type='Magento\Payment\Gateway\Response\HandlerChain'>
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name='payment_details' xsi:type="string">Jnga\Authorizenet\Gateway\Response\PaymentDetailsHandler</item>
+                <item name='transaction_details' xsi:type="string">Jnga\Authorizenet\Gateway\Response\TransactionAdditionalInfoHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="JngaAuthorizenetConfigurableInfo" type="Magento\Payment\Block\ConfigurableInfo">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item name="methodCode" xsi:type="string">jnga_authorizenet</item>
+                <item name="is_secure_mode" xsi:type="string">1</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Jnga\Authorizenet\Gateway\Config">
+        <arguments>
+            <argument name="valueHandlerPool" xsi:type="object">JngaAuthorizenetValueHandlerPool</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Payment\Block\Info">
+        <plugin name="JngaAuthorizenetAdditionalInfoLabels" type="Jnga\Authorizenet\Plugin\Payment\Block\Info"/>
+    </type>
     
 </config>

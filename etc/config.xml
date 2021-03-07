@@ -5,13 +5,24 @@
             <jnga_authorizenet>                
                 <title>Authorize.Net Payment</title>
                 <model>JngaAuthorizenetFacade</model>
+                <active>1</active>
                 <is_gateway>1</is_gateway>
                 <can_use_checkout>1</can_use_checkout>
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
-                <cctypes>VI,MC</cctypes>
+                <cctypes>VI,MC</cctypes>                
                 <payment_action>authorize_capture</payment_action>
                 <debug>true</debug>
+               
+                <privateInfoKeys>auth_code,avs_result_code,cvv_result_code,cavv_result_code,test_request</privateInfoKeys>
+                <paymentInfoKeys>auth_code,avs_result_code,cvv_result_code,cavv_result_code,account_number,account_type,test_request</paymentInfoKeys>
+
+                <is_sandbox>1</is_sandbox>
+                <gateway_url>https://api.authorize.net/xml/v1/request.api</gateway_url>
+                <gateway_url_sandbox>https://apitest.authorize.net/xml/v1/request.api</gateway_url_sandbox>
+                <api_login_id>4Y5mNxN8M</api_login_id>
+                <transaction_key>58M23z53WT3g6vqd</transaction_key>
+                
             </jnga_authorizenet>
         </payment>   
     </default>

@@ -8,4 +8,13 @@
         </arguments>
         
     </type>
+
+    <type name="JngaAuthorizenetConfigurableInfo">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item name="is_secure_mode" xsi:type="string">1</item>
+                <item name="methodCode" xsi:type="string">jnga_authorizenet</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
